@@ -4,10 +4,10 @@ import struct
 import pickle
 import time
 import threading
-SERVER_IP = '192.168.1.8'
+SERVER_IP = '192.168.1.112'
 PORT = 8000
 INTERVAL = 2
-STREAM_URL = "http://192.168.1.3:8080/video"
+STREAM_URL = "http://192.168.1.73:8080/video"
 
 class FreshCamera:
     def __init__(self, url):
