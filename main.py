@@ -16,9 +16,6 @@ def main():
     server.listen(5)
     print(f"[SYSTEM] LPR Server Online @ {config.PORT}")
     print(f"[SYSTEM] Saving to: {config.SAVE_FOLDER}/")
-
-    img_count = 1
-
     while True:
         try:
             conn, addr = server.accept()
@@ -47,7 +44,7 @@ def main():
                 plate_crop = frame[y1:y2, x1:x2]
 
                 # 2. Pre-process
-                # plate_crop = processing.preprocess_for_ocr(plate_crop)
+                plate_crop = processing.preprocess_for_ocr(plate_crop)
 
                 # 3. Split Logic (Square/Long)
                 is_split, parts = processing.split_plate(plate_crop)
@@ -65,15 +62,13 @@ def main():
                 else:
                     if config.PRINT_LOGS:
                         print(f"Rejected: {raw_text}")
-
-            # --- SAVE & DISPLAY ---
             if found_valid:
                 filename = f"{config.SAVE_FOLDER}/plate_{clean_text}.png"
                 cv2.imwrite(filename, frame)
             
-            if config.SHOW_WINDOW:
-                cv2.imshow("Professional LPR", frame)
-                if cv2.waitKey(1) == ord('q'): break
+            # if config.SHOW_WINDOW:
+            #     cv2.imshow("Professional LPR", frame)
+            #     if cv2.waitKey(1) == ord('q'): break
 
             conn.close()
 
