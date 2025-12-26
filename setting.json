@@ -1,0 +1,6 @@
+{
+    "yolo_model": "license_plate_detector.pt",
+    "conf_threshold": 0.5,
+    "save_folder": "captured_plates",
+    "host_ip": "0.0.0.0"
+}

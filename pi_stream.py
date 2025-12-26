@@ -4,15 +4,21 @@ import struct
 import pickle
 import time
 import threading
-SERVER_IP = '192.168.1.8'
-PORT = 8000
-INTERVAL = 2
-STREAM_URL = "http://192.168.1.3:8080/video"
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--server_ip", type=str, required=True, help="IP of the LPR Server")
+parser.add_argument("--port", type=int, default=8000, help="Port of the LPR Server")
+parser.add_argument("--camera", type=str, default="0", help="Camera URL or ID")
+args = parser.parse_args()
+CAMERA_SOURCE = 0 if args.camera == "0" else args.camera
+
+SERVER_IP = args.server_ip
+PORT = args.port
+INTERVAL = 2.0
 
 class FreshCamera:
-    def __init__(self, url):
-        self.url = url
-        self.capture = cv2.VideoCapture(url)
+    def __init__(self, source):
+        self.capture = cv2.VideoCapture(source)
         self.latest_frame = None
         self.status = False
         self.stopped = False
@@ -30,9 +36,9 @@ class FreshCamera:
                 else:
                     self.status = False
             else:
-                print("[WARN] Cam disconnected. Reopening...")
-                self.capture.open(self.url)
+                print("[WARN] Camera disconnected. Reconnecting...")
                 time.sleep(1)
+                self.capture.open(CAMERA_SOURCE)
 
     def get_frame(self):
         return self.status, self.latest_frame
@@ -40,8 +46,12 @@ class FreshCamera:
     def stop(self):
         self.stopped = True
         self.capture.release()
-print(f"[INFO] Connecting to Phone (Threaded Mode): {STREAM_URL}")
-cam = FreshCamera(STREAM_URL)
+
+print(f"Client Started.")
+print(f"Camera: {CAMERA_SOURCE}")
+print(f"Target: {SERVER_IP}:{PORT}")
+
+cam = FreshCamera(CAMERA_SOURCE)
 time.sleep(2)
 
 while True:
@@ -49,22 +59,25 @@ while True:
         ret, frame = cam.get_frame()
 
         if not ret or frame is None:
-            print("[WARN] No frame available yet...")
+            print(" No frame...")
             time.sleep(1)
             continue
         _, img_encoded = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
         data = pickle.dumps(img_encoded, 0)
         size = len(data)
+
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client_socket.settimeout(2)
+            client_socket.settimeout(3)
             client_socket.connect((SERVER_IP, PORT))
             client_socket.sendall(struct.pack(">L", size) + data)
             client_socket.close()
-            print(f"[LIVE] Snapshot sent! ({size/1024:.1f} KB)")
+            print(f"Snapshot ({size/1024:.1f} KB)")
         except Exception as e:
-            print(f"[SKIP] Laptop busy or network error: {e}")
+            print(f"Connect error: {e}")
+
         time.sleep(INTERVAL)
+
     except KeyboardInterrupt:
         cam.stop()
         break
