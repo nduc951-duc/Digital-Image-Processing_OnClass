@@ -1,0 +1,9 @@
+{
+    "host_ip": "0.0.0.0",
+    "port": "8000",
+    "yolo_model": "license_plate_detector.pt",
+    "pi_ip": "192.168.82.16",
+    "pi_user": "pi",
+    "pc_ip": "192.168.131.16",
+    "camera_url": "0"
+}
